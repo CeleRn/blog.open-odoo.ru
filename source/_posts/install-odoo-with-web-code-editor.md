@@ -1,42 +1,243 @@
 ---
 title: Установка Odoo 11 с редактором кода в браузере
 banner: /source/favicon.png
-shortdesc: Короткое описание
+shortdesc: >-
+  В данной статье я изложу свой личный опыт настройки рабочего окружения для
+  разработки модулей в системе Odoo.
 ---
-Welcome to [Hexo](https://hexo.io/)! This is your very first post. Check [documentation](https://hexo.io/docs/) for more info. If you get any problems when using Hexo, you can find the answer in [troubleshooting](https://hexo.io/docs/troubleshooting.html) or you can ask me on [GitHub](https://github.com/hexojs/hexo/issues).
+В данной статье я изложу свой личный опыт настройки рабочего окружения для разработки модулей в системе Odoo.
 
-## Quick Start
+## Предпосылки к тому, почему я выбрал именно этот путь.
 
-```
-Test 1Test 2
-```
+По роду деятельности я вынужден часто перемещаться между объектами клиентов, а так же работать в разных операционных системах и не на своем компьютере. Был даже случай, когда в ночном клубе мне выдали MacBook и у нас не было интернета. (Да такое бывает в 2017 году.). И во всех этих ситуациях мне нужна система в которой я могу вносить правки в код, отлаживать его. Так же было-бы неплохо чтобы можно было глянуть в базу данных. Ну и доступ к Git репозиторию тоже не будет лишним. 
+
+Итак, вот список требований который я выдвинул к той системе которая бы меня устраивала полностью:
+
+* Odoo должна работать в изолированном виртуальном окружении например python virtualenv, Docker или виртуальная машина. Это позволит не думать о том как запустить саму Odoo на нужном компьютере. 
+* Редактор кода или IDE должен работать так же на любой декстопной OS (Win\Lin\Mac). В том числе чтобы была возможность подцепиться к работающему экземпляру Odoo. Ну и он должен хотя бы не раздражать своей дубовостью, ну и потреблять не особо конское количество ресурсов
+* Клиент базы данных Postgresql в принципе должен уметь тоже самое что и редактор кода, цепляться к базе данных с которой работает Odoo, работать на всех настольных операционных системах, и не быть слишком уж ограниченным по функционалу
+* Работа в командной строке для перезапуска Odoo после применных изменений.
+* Программа так же должна уметь цепляться к работающему экзмпляру Odoo. Ну и при этом запускаться на всех операционках
+* Работа с Git — все тоже самое что и у остальных
+* И все это должно, по возможности, умещаться на флешке, чтобы воткнув ее в компьютер я мог поднять рабочее окружение без особых танцев с бубном на любом компе, даже если нет доступа к Интернет.
+* Возможность работать с удаленным сервером, так же на любом компе без потери функционала.
+
+Сформулировав все эти требования — я решил что это набор каких-то взаимоисключающих требований. И в тот момент мне сразу вспомнилась 1C, инсталяция которой включает в себя весь необходимый инструментарий. Но правда ее сложно назвать кросплатформенной, но то что разрабочтик всегда знает что он не останется без инструментария — очень серьезный фактор ее популярности (Я так думаю).
+
+В общем не буду утомлять своими изысканиями, это тема наверное отдельной статьи скажу ниже пойдет полноценное описание того, как настроить такую систему, и которая удовлетворяет всем вышеописанным пунктам.
+
+### Итак решение к которому я пришел:
+
+Odoo работает внутри виртуальной машины VirtualBox. Редактор кода, полноценный терминал и клиент к базе данных работают в браузере. И редактируется код уже непосредственно внутри виртуальной машины.
+
+### Выглядит это следующим образом:
+
+![KodeExplorer с Odoo](/source/kodexplorer.png)
+
+как видите это полноценные и работоспособные инструменты. Поскольку все происходит в браузере, то мне не нужно беспокоится о дополнительном софте. Претензий к редактору кода нет, работают все нужные мне горячие клавиши, показываются все спец символы и колонки, есть темы и подсказки. Клиент к базе данных тоже не вызывал никаких проблем, к тому же всегда можно поставить официальный PgAdmin4. Наименее удобен это терминал, но и он немного неудобен в работе с буфером обмена, в остальном все отлично.
+
+Исталяционный файлы для VirtualBox есть для всех настольных операционных систем, а саму машину можно просто выгрузить на флешку в один файл и таким образом у вас, в одном файле, есть все необходимое. И вы можете развернуть его везде где есть установленные VirtualBox, а если его нет, установить самостоятельно. К тому же, данную систему можно развернуть и на любой другой виртуалке, а то и подозреваю что в Docker. Ну а настольный компьютер без браузера — вообще нонсенс.
+
+Кстати данную штуку можно применять не только для разработки Odoo, а вообще для всего, на что хватит фантазии.  Лично мной проверена рабоспособность всей системы на виртуальной машине с 256 Мб ОЗУ. Правда там внутри была Odoo 8. 11 Версия живет на 1Гб вполне бодро.
+
+## Итак, приступим к развертыванию этой вундервафли.
+
+Настройки VirtualBox:
+
+1. ОЗУ 1Гб
+2. Процессор 1 шт.
+3. Сеть — в режиме моста, адрес я оставляю динамический, статику прописать можно в любой момент по желанию
+4. ОС — Debian 9 на момент написания статьи
+
+Остальное — на ваш вкус, да и эти пункты не гвоздями прибиты.
+
+### Установка Odoo
+
+Подробно можно ознакомиться вот [здесь](https://doc.open-odoo.ru/developer/11.0/ru/setup/install.html#packaged-installers), там есть документация для версий начиная от 8.
+
+Я расскажу как запустить все версии на Debian 9. 
+
+Выполняем все от root, или от sudo
 
 ```bash
-$ hexo new "My New Post"
+wget -O - https://nightly.odoo.com/odoo.key | apt-key add -
+echo "deb http://nightly.odoo.com/11.0/nightly/deb/ ./" > /etc/apt/sources.list.d/odoo.list
+apt-get update && apt-get install odoo -y
 ```
 
-More info: [Writing](https://hexo.io/docs/writing.html)
+Этого достаточно, чтобы пакетный менеджер все установил самостоятельно.
 
-### Run server
+Для установки версий 8, 9 и 10 нам нужно установить пакеты из Debian8. Я делаю это так:
+
+```
+wget http://ftp.us.debian.org/debian/pool/main/p/python-support/python-support_1.0.15_all.deb
+wget http://ftp.br.debian.org/debian/pool/main/p/python-pypdf/python-pypdf_1.13-2_all.deb
+dpkg -i ./python-support_1.0.15_all.deb
+dpkg -i ./python-pypdf_1.13-2_all.deb 
+```
+
+После этого мы можем в автоматическом режиме установить с помощью пакетного менеджера:
+
+8 версия
 
 ```bash
-$ hexo server
+wget -O - https://nightly.odoo.com/odoo.key | apt-key add -
+echo "deb http://nightly.odoo.com/8.0/nightly/deb/ ./" >> /etc/apt/sources.list
+apt-get update && apt-get install odoo
 ```
 
-More info: [Server](https://hexo.io/docs/server.html)
-
-### Generate static files
+9 версия
 
 ```bash
-$ hexo generate
+wget -O - https://nightly.odoo.com/odoo.key | apt-key add -
+echo "deb http://nightly.odoo.com/9.0/nightly/deb/ ./" >> /etc/apt/sources.list
+apt-get update && apt-get install odoo
 ```
 
-More info: [Generating](https://hexo.io/docs/generating.html)
-
-### Deploy to remote sites
+10 версия
 
 ```bash
-$ hexo deploy
+wget -O - https://nightly.odoo.com/odoo.key | apt-key add -
+echo "deb http://nightly.odoo.com/10.0/nightly/deb/ ./" >> /etc/apt/sources.list
+apt-get update && apt-get install odoo
 ```
 
-More info: [Deployment](https://hexo.io/docs/deployment.html)
+Остальные варианты вы можете прочитать по ссылке, указанной выше.
+Итак, Odoo мы установили, теперь можем приступить к установке и настройке пакета, который будет обеспечивать работу терминала в браузере.
+Установка WEB-терминала
+
+Установим пакет
+sudo apt-get install shellinabox -y
+задем немного отредактируем файл конфигурации, это нужно для того, чтобы данный сервис мог работать за nginx. Находим строку, указанную ниже
+SHELLINABOX_GROUP="${SHELLINABOX_GROUP:-shellinabox}"
+и после нее добавляем вот эту:
+SHELLINABOX_ARGS="--localhost-only --disable-ssl"
+затем обновляем информацию о демонах и перезапускам наш shellinabox
+systemctl daemon-reload
+service shellinabox restart
+
+У этой программы есть свои особенности и касаются они работы буфера обмена. Если вы нажмете Ctrl+C, то эта комбинация прервет выполнение программы, я например так останавливаю работающую Odoo, но и эта же комбинация сохранит выделенный фрагмент в буфер обмена вашего компьютера, не виртуальной машины. Чтобы воспользоваться передачей из буфера обмена компьютера на виртуалку, нужно воспользоваться мышкой. В остальном все работает отлично. 
+Если кто знает что-то более удобное в работе, пишите. Я буду очень признателен за подсказку.
+Установка NGINX
+Поскольку у нас на виртуальном компьютере будет работать как минимум 3 различных сервера, то нам нужно как-то управлять этим безобразием. Поэтому ставим nginx, который будет слушать 80 порт и разруливать по url доступ к нашим подсистемам.
+wget https://nginx.org/keys/nginx_signing.key
+apt-key add nginx_signing.key
+echo "deb http://nginx.org/packages/debian/ stretch nginx" > /etc/apt/sources.list.d/nginx.list
+echo "deb-src http://nginx.org/packages/debian/ stretch nginx" >> /etc/apt/sources.list.d/nginx.list
+apt-get update
+apt-get install nginx
+rm /etc/nginx/conf.d/default.conf
+touch /etc/nginx/conf.d/web-ide.conf
+
+в файл /etc/nginx/conf.d/web-ide.conf добавляем следующее содержимое:
+
+server {
+	listen 80 default_server;
+	listen \[::]:80 default_server;
+	# server_name _ default_server;
+	root /home/www-data/;
+	index index.php;
+	
+	location /terminal/ {
+		proxy_pass http://127.0.0.1:4200;
+	}
+	location /kodexplorer/ {
+			root /home/www-data/;
+			index index.php;
+	}
+	location ~ .php$ {
+		try_files $uri =404;
+		fastcgi_split_path_info ^(.+.php)(.*)$;
+		fastcgi_pass unix:/run/php/php7.0-fpm.sock;
+		fastcgi_index index.php;
+		fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+		include fastcgi_params;
+		fastcgi_ignore_client_abort on;
+		fastcgi_param SERVER_NAME $http_host;
+	}
+	location / {
+		proxy_pass http://127.0.0.1:8069;
+		proxy_redirect off;
+		# Add Headers for odoo proxy mode
+		proxy_set_header X-Forwarded-Host $host;
+		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+		proxy_set_header X-Forwarded-Proto $scheme;
+		proxy_set_header X-Real-IP $remote_addr;
+	}
+	
+	location /longpolling {
+		proxy_pass http://127.0.0.1:8069;
+	}
+}\
+Сохраняем файл и перезапускаем сервер
+service nginx restart
+Настройка рабочего пространства
+Для того, чтобы нам было удобно работать с кодом, нам нужно создать каталоги таким образом, чтобы было удобно создавать проекты, работать с модулями Odoo и Git. Здесь я предлагаю свое решение, оно не идеально, но на данном этапе моего развития не раздражает, хотя я уже вижу то, что можно было бы поправить. Для начала мы создадим каталог, в который будет иметь доступ группа www-data (поскольку у нас все основано на web, то как бы логично использовать штатную для такого рода вещей группу)
+usermod -a -G www-data nginx
+usermod -a -G www-data odoo
+Дальше вы можете разрешить пользователю www-data логиниться и работать от его имени. В файле 
+/etc/passwd  поменять /usr/sbin/nologin на /bin/bash
+ или создать для этих нужд отдельного пользователя. Все зависит от ваших предпочтений по безопасности. Я использую систему от своего пользователя, и буду этот пример использовать в дальнейшем.
+Теперь создадим каталог
+mkdir /home/www-data
+Это будет корневой каталог, в котором будут располагаться проекты, ссылка на стандартные модули Odoo, чтобы можно было подсматривать в готовый код, ну и сам редактор кода.
+
+/home/www-data
+|
+|-- kodexplorer
+|   |-- ...
+|   |-- …
+|
+|-- ~odoo_addons_symlink
+|
+`-- projects
+	|
+	|-- project_1
+	|	|
+	|	|-- odoo_modules
+	|	|
+	|	|--my_odoo_module
+	|	|	|
+	|	|`--...
+	|	|
+	|	|-- some_project_dir
+	|	|
+	|	|-- some_project_file.fml
+	|	|
+	|	`-- project_odoo_config_file.conf
+	|`-- restart_odoo.sh
+
+Файловая структура будет выглядеть вот таким образом. В каталоге projects будут находится папки с проектами, внутри проекта должен быть обязательный каталог odoo_modeles и файл конфигурации Odoo с расширением cfg. Скрипт для перезапуска Odoo будет одинаковый для всех, а все необходимые параметры мы будетм передавать через командную строку.
+Вот содержимео файла restart_odoo.sh
+service odoo stop
+killall -9 python
+sudo -u odoo /usr/bin/python /usr/bin/odoo -u $2 -d $1 -i $2 -c /home/www-data/projects/$1/project_odoo_config_file.conf
+Для того, чтобы запустить этот скрипт, я добавляю в sudoers пользователя, от имени которого работаю в терминале
+echo "user ALL=(ALL) NOPASSWD: /home/www-data/projects/restart_odoo.sh" >> /etc/sudoers
+предварительно установив пакет sudo
+apt-get install sudo
+Что-же у меня в файле конфигурации:
+\[options]
+addons_path = /home/www-data/projects/имя_вашего_проекта/odoo_modules
+db_user = odoo
+db_password =  ваш_пароль
+
+Все, чисто теоретически, больше ничего не нужно для данного решения.
+Установка KodExplorer (редактор кода и не только)
+Нужно установить php-fpm.
+apt-get -y install php-fpm php-curl php-gd php-pgsql php-mbstring
+Теперь скачаем архив, и расположим, его в нужном каталоге.
+wget https://github.com/kalcaddle/KODExplorer/archive/master.zip
+unzip master.zip -d /home/www-data
+mv /home/www-data/KodExplorer* /home/www-data/kodexplorer
+chown www-data:www-data -R /home/www-data
+chmod 777 -R /home/www-data
+service nginx restart
+Теперь вы можете вот по этим ссылкам найти все нужные инструменты:
+http://ip_вашей_виртуалки/terminal — это терминал, который работает в бразуере
+http://ip_вашей_виртуалки/kodexplorer — это целый комбайн, который работает в бразуере. Здесь есть файловый менеджер, где вы можете заливать файлы в проект простым перетаскиванием, и прочие обычные штуки, только в браузере на удаленном компьютере. Это так же редактор кода и в плагинах есть Adminer, который представляет собой отличную админку базы Postgresql и не только.
+Для того, чтобы у вас работал вход через Adminer нужно указывать в качестве адреса 127.0.0.1 (localhost может не работать, ввиду того, что он и для ipV6 тоже служит служебным именем), а так же нужно установить для пользователя odoo свой пароль, который вы должны прописать в файл конфигурации при запуске через скрипт.
+sudo su postgres
+psql
+ALTER USER odoo WITH PASSWORD 'ваш_пароль'
+/q
